@@ -54,7 +54,7 @@ exports.signup = function(req, res, next) {
             streetNo : streetNo,
             city : city,
             state : state,
-            userImage: '',
+            userImage: 'default.png',
             password: password
         };
 
@@ -78,7 +78,7 @@ exports.signup = function(req, res, next) {
                     streetNo: result[0].streetNo,
                     city : result[0].city,
                     state : result[0].state,
-                    userImage: '',
+                    userImage: 'default.png',
                     password: result[0].password,
                     id: result[0].id
                 };

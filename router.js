@@ -10,17 +10,295 @@ const requireSignin = passport.authenticate('local', { session: false });
 
 
 module.exports = function(app) {
-    // check it out
-    // app.get("/fetchUserSaleRentItem/:id", (req, res) => {
-    //     var id = req.params.id;
-    //     db.query("SELECT * from buyitems WHERE user_id = ?", id, function(error, result) {
-    //         var result1 = result[0];
-    //         db.query("SELECT * from rentitems WHERE user_id = ?", id , function(error, results) {
-    //             var result2 = results[0];
-    //             res.send({...result1, result2});
-    //         })
-    //     })
-    // });
+
+    app.get("/sellerRating/:id", (req, res) => {
+        const id = req.params.id;
+        db.query("select sum(rating)/count(rating) as rate from seller_review where sellerId = ?", id, function(error, result) {
+            if (error) {
+                console.log(error);
+                return error;
+            }
+            if (!result[0].rate) {
+                res.send("0");
+            } else {
+            console.log(result[0].rate);
+            res.send(result[0]);
+            }
+        })
+    })
+
+    app.post("/sellerReview", (req, res) => {
+        const {
+            reviewerId,
+            Rating,
+            Title,
+            Description,
+            sellerId
+        } = req.body;
+
+        const review = {};
+
+        review.reviewerId = reviewerId;
+        review.sellerId = sellerId;
+        review.rating = Rating;
+        review.title = Title;
+        review.comment = Description;
+        
+
+        db.query("INSERT into seller_review SET ?", review, function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send(result);
+        });
+
+    })
+
+    app.post("/rentReview", (req, res) => {
+        const {
+            itemId,
+            reviewerId,
+            Rating,
+            Title,
+            Description
+        } = req.body;
+
+        const review = {};
+        review.itemId = itemId;
+        review.reviewerId = reviewerId;
+        review.rating = Rating;
+        review.title = Title;
+        review.comment = Description;
+
+        db.query("INSERT into rent_review SET ?", review, function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send(result);
+        });
+    })
+
+
+    app.post("/updateReqSaleItem", (req, res) => {
+        const {
+            buyDescription,
+            itemCategory,
+            itemId,
+            itemName,
+            itemPrice
+        } = req.body;
+        const reqSale = {}
+        if(buyDescription) reqSale.item_desc  = buyDescription; 
+        if (itemCategory) reqSale.item_category = itemCategory;
+        if(itemName) reqSale.item_name = itemName;
+        if (itemPrice) reqSale.item_price = itemPrice;
+
+        db.query("UPDATE wtbitems SET  ? WHERE item_id = ?", [reqSale, itemId], function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send(result);
+        })
+    })
+
+    app.post("/updateReqRentItem", (req, res) => {
+
+        const {
+            itemCategory,
+            itemDescription,
+            itemId,
+            itemName,
+            itemRate,
+            itemRentDurLimitDays,
+            itemRentDurLimitHours
+        } = req.body;
+
+        const reqRent = {}
+
+        if(itemCategory) reqRent.item_category = itemCategory;
+        if(itemDescription) reqRent.item_desc = itemDescription;
+        if(itemName) reqRent.item_name = itemName;
+        if(itemRate) reqRent.rent_rate = itemRate;
+        if(itemRentDurLimitDays) reqRent.rent_duration_days = itemRentDurLimitDays;
+        if(itemRentDurLimitHours) reqRent.rent_duration_hours = itemRentDurLimitHours;
+
+        db.query("UPDATE wtritems SET  ? WHERE item_id = ?", [reqRent, itemId], function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send(result);
+        })
+        
+    })
+
+
+    app.get("/fetchSingleReqWtb/:itemid", (req ,res) => {
+        const itemId = req.params.itemid;
+        // console.log("item id", itemId);
+        db.query("SELECT * FROM wtbitems WHERE item_id = ?", itemId, function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+
+            console.log("item" ,result[0]);
+            res.send(result[0]);
+        })
+    });
+
+    app.get("/fetchSingleReqWtbOwner/:ownerid", (req, res) => {
+        const ownerId = req.params.ownerid;
+        db.query("SELECT * FROM users WHERE id = ?", ownerId, function(error, result) {
+            if (error) {
+                console.log(error);
+                return error;
+            }
+            console.log("owner" ,result[0]);
+            res.send(result[0]);
+        })
+
+        // res.send("done");
+    });
+
+    app.get("/fetchSingleReqWtr/:itemid", (req ,res) => {
+        const itemId = req.params.itemid;
+        // console.log("item id", itemId);
+        db.query("SELECT * FROM wtritems WHERE item_id = ?", itemId, function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+
+            console.log("wtr i" ,result[0]);
+            res.send(result[0]);
+        })
+    });
+
+    app.get("/fetchSingleReqWtrOwner/:ownerid", (req, res) => {
+        const ownerId = req.params.ownerid;
+        db.query("SELECT * FROM users WHERE id = ?", ownerId, function(error, result) {
+            if (error) {
+                console.log(error);
+                return error;
+            }
+            console.log("wtr owner" ,result[0]);
+            res.send(result[0]);
+        })
+
+        // res.send("done");
+    });
+
+
+    app.post("/updateSaleItemDetail", (req ,res) => {
+        const details = req.body;
+
+        const {
+            itemName,
+            itemCategory,
+            itemDescription,
+            item_dop,
+            itemPrice,
+            id
+        } = req.body;
+
+        var saleItem = {}
+
+        if(itemName) saleItem.item_name = itemName;
+        if(itemCategory) saleItem.item_category = itemCategory;
+        if(itemDescription) saleItem.item_desc = itemDescription;
+        if(item_dop) saleItem.item_dop = item_dop;
+        if(itemPrice) saleItem.item_price = itemPrice;
+
+        db.query("UPDATE buyitems set ? WHERE item_id = ?", [saleItem,id], function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send(result);
+        })
+    })
+
+    app.post("/updateRentItemDetail", (req ,res) => {
+        const details = req.body;
+        console.log("curr details", details)
+
+        const {
+            itemName,
+            itemCategory,
+            itemDescription,
+            itemPurDate,
+            itemRentRate,
+            itemRentDurLimitDays,
+            itemRentDurLimitHours,
+            id
+        } = req.body;
+
+        var rentItem = {}
+
+        if(itemName) rentItem.item_name = itemName;
+        if(itemCategory) rentItem.item_category = itemCategory;
+        if(itemDescription) rentItem.item_desc = itemDescription;
+        if(itemPurDate) rentItem.item_dop = itemPurDate;
+        if(itemRentRate) rentItem.rent_rate = itemRentRate;
+        if(itemRentDurLimitDays) rentItem.rent_duration_days = itemRentDurLimitDays;
+        if(itemRentDurLimitHours) rentItem.rent_duration_hours = itemRentDurLimitHours;
+
+        db.query("UPDATE rentitems set ? WHERE item_id = ?", [rentItem,id], function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send(result);
+        })
+    })
+
+    app.delete("/deleteSaleItem/:id", (req, res) => {
+        const id = req.params.id;
+        db.query("delete from buyitems where item_id = ?", id, function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send("Deleted");
+        })
+    })
+
+    app.delete("/deleteRentItem/:id", (req, res) => {
+        const id = req.params.id;
+        db.query("delete from rentitems where item_id = ?", id, function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send("Deleted");
+        })
+    })
+
+    app.delete("/deletewtbItem/:id", (req, res) => {
+        const id = req.params.id;
+        db.query("delete from wtbitems where item_id = ?", id, function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send("Deleted");
+        })
+    })
+
+    app.delete("/deletewtrItem/:id", (req, res) => {
+        const id = req.params.id;
+        db.query("delete from wtritems where item_id = ?", id, function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send("Deleted");
+        })
+    })
 
     app.get("/fetchUserSaleItem/:id", (req, res) => {
         var id = req.params.id;
@@ -29,7 +307,6 @@ module.exports = function(app) {
                 console.log("i am error", error);
                 return error;
             }
-            console.log("sale", result);
             res.send(result)
         })
     })
@@ -41,7 +318,6 @@ module.exports = function(app) {
                 console.log("i am error", error);
                 return error;
             }
-            console.log("rent", result);
             res.send(result)
         })
     })
@@ -53,7 +329,6 @@ module.exports = function(app) {
                 console.log("i am error", error);
                 return error;
             }
-            console.log("wtb", result);
             res.send(result)
         })
     })
@@ -65,7 +340,6 @@ module.exports = function(app) {
                 console.log("i am error", error);
                 return error;
             }
-            console.log("wtr", result);
             res.send(result)
         })
     })
@@ -78,7 +352,6 @@ module.exports = function(app) {
                 console.log("mememe", error);
                 return error;
             }
-            // console.log(result);
             res.send(result);
         })
     })
@@ -167,17 +440,49 @@ module.exports = function(app) {
         })
     })
 
-    app.get("/fetchSaleItems", (req, res) => {
-        db.query("SELECT * FROM buyitems", function (error, result) {
-          if(error) {
-            console.log("queue", error);
-            return error;
-          }
-          res.send(result);
+
+    // I am currently here
+    app.post("/fetchSaleItems", (req, res) => {
+        console.log("i am body", req.body);
+        var category = req.body.category
+        var minPrice = req.body.minPrice
+        var maxPrice = req.body.maxPrice;
+        if(category === '') category = "category"
+        if(minPrice === '') minPrice = -1
+        if(maxPrice === '') maxPrice = -1
+        db.query(`call filterSaleItems("${category}",${minPrice}, ${maxPrice})`,["%", minPrice, maxPrice] ,function(error, result) {
+            if(error) {
+                    console.log("queue", error);
+                    return error;
+                  }
+                  res.send(result[0]);
         })
+        // db.query(`select * from buyitems where item_category like "${category}" and item_price between ${minPrice} and ${maxPrice}`,["%", minPrice, maxPrice] ,function(error, result) {
+        //     if(error) {
+        //             console.log("queue", error);
+        //             return error;
+        //           }
+        //           res.send(result);
+        // })
+        // db.query("SELECT * FROM buyitems", function (error, result) {
+        //   if(error) {
+        //     console.log("queue", error);
+        //     return error;
+        //   }
+        //   res.send(result);
+        // })
       })
 
-      app.get("/fetchRentItems", (req, res) => {
+      app.post("/fetchRentItems", (req, res) => {
+        console.log("i am body", req.body);
+        var category = req.body.category
+        var minPrice = req.body.minPrice
+        var maxPrice = req.body.maxPrice;
+        var minRating = req.body.minRating;
+        if(category === '') category = "category"
+        if(minPrice === '') minPrice = -1
+        if(maxPrice === '') maxPrice = -1
+        if(minRating === '') minRating = -1
         db.query("SELECT * FROM rentitems", function (error, result) {
           if(error) {
             console.log("queue", error);
@@ -272,7 +577,7 @@ module.exports = function(app) {
                 console.log("iam here" ,error);
                 return error;
             }
-            res.send({sdad: "dssf"});
+            res.send("wtbitems uploaded");
         })
     })
 

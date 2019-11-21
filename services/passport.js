@@ -12,7 +12,7 @@ const LocalLogin = new LocalStrategy(localOptions , function(email, password, do
     // if it is the correct email and password
     // otherwise, call done with false
     db.query("SELECT * FROM users WHERE email = ?", [email], function(err, user) {
-        console.log("sfdsfsdfsd", user)
+        // console.log("sfdsfsdfsd", user)
         if (err) { return done(err); }
         // console.log("signin checking" ,user === false)
         if(!user.length) { return done(null, false); }
