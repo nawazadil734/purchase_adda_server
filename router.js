@@ -483,25 +483,70 @@ module.exports = function(app) {
         if(minPrice === '') minPrice = -1
         if(maxPrice === '') maxPrice = -1
         if(minRating === '') minRating = -1
-        db.query("SELECT * FROM rentitems", function (error, result) {
-          if(error) {
-            console.log("queue", error);
-            return error;
-          }
-          res.send(result);
+
+        db.query(`call filterRentItems("${category}",${minPrice}, ${maxPrice}, ${minRating})`,["%", minPrice, maxPrice, minRating] ,function(error, result) {
+            if(error) {
+                    console.log("queue", error);
+                    return error;
+                  }
+                  console.log("nanan", result)
+                  res.send(result[0]);
         })
+        // db.query("SELECT * FROM rentitems", function (error, result) {
+        //   if(error) {
+        //     console.log("queue", error);
+        //     return error;
+        //   }
+        //   res.send(result);
+        // })
       })
       
-      app.get("/fetchReqItems", (req, res) => {
-        db.query("SELECT * FROM  wtbitems", function (error, result) {
-          if(error) {
-            console.log("queue", error);
-            return error;
-          }
-          res.send(result);
+      app.post("/fetchReqWTBItems", (req, res) => {
+
+        console.log("i am body", req.body);
+        var category = req.body.category
+        var minPrice = req.body.minPrice
+        var maxPrice = req.body.maxPrice;
+        var sort = req.body.sort;
+        if(category === '') category = "category"
+        if(minPrice === '') minPrice = -1
+        if(maxPrice === '') maxPrice = -1
+        if(sort === '') sort = "default"
+
+        db.query(`call filterWTBItems("${category}",${minPrice}, ${maxPrice}, "${sort}")`,["%", minPrice, maxPrice, sort] ,function(error, result) {
+            if(error) {
+                    console.log("queue", error);
+                    return error;
+                  }
+                  console.log("nanan", result)
+                  res.send(result[0]);
         })
       })
 
+      app.post("/fetchReqWTRItems", (req, res) => {
+
+        console.log("i am body", req.body);
+        var category = req.body.category
+        var minPrice = req.body.minPrice
+        var maxPrice = req.body.maxPrice;
+        var sort = req.body.sort;
+        if(category === '') category = "category"
+        if(minPrice === '') minPrice = -1
+        if(maxPrice === '') maxPrice = -1
+        if(sort === '') sort = "default"
+
+        db.query(`call filterWTRItems("${category}",${minPrice}, ${maxPrice}, "${sort}")`,["%", minPrice, maxPrice, sort] ,function(error, result) {
+            if(error) {
+                    console.log("queue", error);
+                    return error;
+                  }
+                  console.log("nanan", result)
+                  res.send(result[0]);
+        })
+      })
+
+
+      
     app.post('/uploadSaleItem', function(req, res) {
         const {
             itemName,
@@ -635,4 +680,15 @@ module.exports = function(app) {
     }) 
     app.post('/api/signin', requireSignin, Authentication.signin);
     app.post('/api/signup', Authentication.signup);
+
+    app.post("/searchQuery", (req, res) => {
+        console.log("query", req.body.query);
+        db.query(`call searchQuery("%${req.body.query}%")`, req.body.query, function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send(result);
+        })
+    })
 };
