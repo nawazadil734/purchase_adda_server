@@ -11,6 +11,33 @@ const requireSignin = passport.authenticate('local', { session: false });
 
 module.exports = function(app) {
 
+    app.get("/fetchRentReview/:itemId/:currentUser", (req, res) => {
+        itemId = req.params.itemId
+        currentUser = req.params.currentUser;
+        db.query(`SELECT * FROM rent_review WHERE itemId = ? AND reviewerId = ?`, [itemId, currentUser], function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send(result[0]);
+        })
+    })
+
+    app.get("/fetchChat/:id", (req, res) => {
+        console.log("current id ", req.params.id)
+        const id = req.params.id;
+
+        db.query(`select sender_id, reciever_id from messaging where sender_id = ? 
+        union select reciever_id, sender_id from messaging where reciever_id = ?`, [id, id], function(error, result) {
+            if(error) {
+                console.log("error ", error);
+                return error;
+            }
+            console.log("chats ", result)
+            res.send(result)   
+        })
+    });
+
     app.get("/sellerRating/:id", (req, res) => {
         const id = req.params.id;
         db.query("select sum(rating)/count(rating) as rate from seller_review where sellerId = ?", id, function(error, result) {
@@ -55,6 +82,9 @@ module.exports = function(app) {
 
     })
 
+
+    // sdfgisdufffffffffffffffffffffffffffffffffffffffffffffffs
+    
     app.post("/rentReview", (req, res) => {
         const {
             itemId,
@@ -63,6 +93,7 @@ module.exports = function(app) {
             Title,
             Description
         } = req.body;
+        
 
         const review = {};
         review.itemId = itemId;
@@ -71,13 +102,39 @@ module.exports = function(app) {
         review.title = Title;
         review.comment = Description;
 
-        db.query("INSERT into rent_review SET ?", review, function(error, result) {
-            if(error) {
-                console.log(error);
-                return error;
+        db.query("SELECT COUNT(*) as count from rent_review where itemId = ? and reviewerId = ?", [review.itemId, review.reviewerId], function(err, resu) {
+            if(err) {
+                console.log(err);
+                return err;
             }
-            res.send(result);
-        });
+            console.log("count ",!resu[0].count);
+            if(resu[0].count === 0) {
+                db.query("INSERT into rent_review SET ?", review, function(error, result1) {
+                    if(error) {
+                        console.log(error);
+                        return error;
+                    }
+                    res.send(result1);
+                }) }
+                else {
+                db.query(`UPDATE rent_review set ? where itemId = ?`,[review, review.itemId], function(error, result) {
+                    if(error) {
+                        console.log(error);
+                        return error;
+                    }
+                    db.query(`SELECT * FROM rent_review WHERE itemId = ? AND reviewerId = ?`, [review.itemId, review.reviewerId], function(error, result2) {
+                        if(error) {
+                            console.log(error);
+                            return error;
+                        }
+                        res.send(result2);
+                    })
+                    // console.log(result)
+                    // res.send(result);
+                })
+            }
+        })
+        
     })
 
 

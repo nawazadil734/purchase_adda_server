@@ -32,6 +32,7 @@ module.exports = (app) => {
     }
 
     var qu = `UPDATE buyitems SET image${imageNo} = ? WHERE item_id = ?`
+    console.log("query ", qu)
     db.query(qu,[file.filename, id], function(error, result) {
         if(error) {
           console.log(error);
