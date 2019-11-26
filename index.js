@@ -15,6 +15,7 @@ require('dotenv').config();
 require('./updatePasswordViaEmail')(app);
 require('./resetPassword')(app);
 require('./forgotPassword')(app);
+require('./image_router')(app);
 
 require('./uploadProfilePhoto')(app);
 

@@ -21,28 +21,28 @@ module.exports = (app) => {
   var upload = multer({ storage: storage })
   app.use(bodyParser.urlencoded({extended: true}))
 
-  app.post("/uploadSaleSinglePhoto/:id/:imageNo", upload.single('myFile'), (req, res, next) => {
-    var id = req.params.id
-    var imageNo = req.params.imageNo;
-    var file = req.file
-    if (!file) {
-      const error = new Error('Please upload a file')
-      error.httpStatusCode = 400
-      return next(error)
-    }
+  // app.post("/uploadSaleSinglePhoto/:id/:imageNo", upload.single('myFile'), (req, res, next) => {
+  //   var id = req.params.id
+  //   var imageNo = req.params.imageNo;
+  //   var file = req.file
+  //   if (!file) {
+  //     const error = new Error('Please upload a file')
+  //     error.httpStatusCode = 400
+  //     return next(error)
+  //   }
 
-    var qu = `UPDATE buyitems SET image${imageNo} = ? WHERE item_id = ?`
-    console.log("query ", qu)
-    db.query(qu,[file.filename, id], function(error, result) {
-        if(error) {
-          console.log(error);
-          res.send(error);
-        } else {
-          console.log(result, file)
-          res.send(file); 
-        }}
-      )}
-  );
+  //   var qu = `UPDATE buyitems SET image${imageNo} = ? WHERE item_id = ?`
+  //   console.log("query ", qu)
+  //   db.query(qu,[file.filename, id], function(error, result) {
+  //       if(error) {
+  //         console.log(error);
+  //         res.send(error);
+  //       } else {
+  //         console.log(result, file)
+  //         res.send(file); 
+  //       }}
+  //     )}
+  // );
 
   app.post("/uploadfile/:id", upload.single('myFile'), (req, res, next) => {
    const id = req.params.id
