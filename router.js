@@ -27,8 +27,8 @@ module.exports = function(app) {
         console.log("current id ", req.params.id)
         const id = req.params.id;
 
-        db.query(`select sender_id, reciever_id from messaging where sender_id = ? 
-        union select reciever_id, sender_id from messaging where reciever_id = ?`, [id, id], function(error, result) {
+        db.query(`select reciever_id,firstName, lastName, userImage,sender_id from (select sender_id, reciever_id from messaging where sender_id = ? 
+        union select reciever_id, sender_id from messaging where reciever_id = ?) A inner join users on A.reciever_id=users.id`, [id, id], function(error, result) {
             if(error) {
                 console.log("error ", error);
                 return error;
