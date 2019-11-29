@@ -11,6 +11,32 @@ const requireSignin = passport.authenticate('local', { session: false });
 
 module.exports = function(app) {
 
+
+    app.get("/clearNotification/:id", (req, res) => {
+        const userId = req.params.id;
+        db.query(`UPDATE users set notiCount = 0 where id = ?`, userId, function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            res.send("cleared");
+        })
+    })
+    
+
+    app.get("/fetchSellerReview/:ownerId/:currentUser", (req, res) => {
+        ownerId = req.params.ownerId
+        currentUser = req.params.currentUser;
+        db.query(`SELECT * FROM seller_review WHERE sellerId = ? AND reviewerId = ?`, [ownerId, currentUser], function(error, result) {
+            if(error) {
+                console.log(error);
+                return error;
+            }
+            console.log(result[0])
+            res.send(result[0]);
+        })
+    })
+
     app.get("/fetchRentReview/:itemId/:currentUser", (req, res) => {
         itemId = req.params.itemId
         currentUser = req.params.currentUser;
@@ -54,7 +80,33 @@ module.exports = function(app) {
         })
     })
 
+
+
+    // ============================================================
+
+    // app.post("/rentReview", (req, res) => {
+    //     const {
+    //         itemId,
+    //         reviewerId,
+    //         Rating,
+    //         Title,
+    //         Description
+    //     } = req.body;
+        
+
+    //     const review = {};
+    //     review.itemId = itemId;
+    //     review.reviewerId = reviewerId;
+    //     review.rating = Rating;
+    //     review.title = Title;
+    //     review.comment = Description;
+
+        
+        
+    // })
+
     app.post("/sellerReview", (req, res) => {
+
         const {
             reviewerId,
             Rating,
@@ -70,20 +122,55 @@ module.exports = function(app) {
         review.rating = Rating;
         review.title = Title;
         review.comment = Description;
+
+        console.log("submiting review ", review)
+
+        db.query("SELECT COUNT(*) as count from seller_review where sellerId = ? and reviewerId = ?", [review.sellerId, review.reviewerId], function(err, resu) {
+            if(err) {
+                console.log(err);
+                return err;
+            }
+            console.log("count ",!resu[0].count);
+            if(resu[0].count === 0) {
+                db.query("INSERT into seller_review SET ?", review, function(error, result1) {
+                    if(error) {
+                        console.log(error);
+                        return error;
+                    }
+                    res.send(result1);
+                }) }
+                else {
+                db.query(`UPDATE seller_review set ? where sellerId = ? and reviewerId = ?`,[review, review.sellerId, review.reviewerId], function(error, result) {
+                    if(error) {
+                        console.log(error);
+                        return error;
+                    }
+                    db.query(`SELECT * FROM seller_review WHERE sellerId = ? AND reviewerId = ?`, [review.sellerId, review.reviewerId], function(error, result2) {
+                        if(error) {
+                            console.log(error);
+                            return error;
+                        }
+                        res.send(result2);
+                    })
+                    // console.log(result)
+                    // res.send(result);
+                })
+            }
+        })
         
 
-        db.query("INSERT into seller_review SET ?", review, function(error, result) {
-            if(error) {
-                console.log(error);
-                return error;
-            }
-            res.send(result);
-        });
+        // db.query("INSERT into seller_review SET ?", review, function(error, result) {
+        //     if(error) {
+        //         console.log(error);
+        //         return error;
+        //     }
+        //     res.send(result);
+        // });
 
     })
 
 
-    // sdfgisdufffffffffffffffffffffffffffffffffffffffffffffffs
+    // =========================================================================
     
     app.post("/rentReview", (req, res) => {
         const {
@@ -404,7 +491,7 @@ module.exports = function(app) {
     app.get("/fetchMessage/:curr/:owner", (req, res) => {
         // console.log("adil" ,req.params.curr);
         // console.log("mc", req.params.owner);
-        db.query(`SELECT * FROM messaging WHERE sender_id = ${req.params.curr} AND reciever_id = ${req.params.owner} OR sender_id = ${req.params.owner} AND reciever_id = ${req.params.curr}`, function(error, result) {
+        db.query(`SELECT * FROM messaging WHERE sender_id = ${req.params.curr} AND reciever_id = ${req.params.owner} OR sender_id = ${req.params.owner} AND reciever_id = ${req.params.curr} order by msg_time`, function(error, result) {
             if(error) {
                 console.log("mememe", error);
                 return error;
