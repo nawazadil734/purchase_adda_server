@@ -12,6 +12,7 @@ module.exports = app => {
                 const hashedPassword = generateHash(password);
                 db.query('UPDATE users SET resetPasswordToken = ? WHERE id = ?', [null, result[0].id], function(err, results) {
                     db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, result[0].id], function(errors, reults) {
+                        // alert("Password Updated")
                         res.status(200).send({ message: "password updated"});
                         // res.redirect("http://localhost:3000/")
                     });
